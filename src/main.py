@@ -6,8 +6,10 @@ Contains the main point of the game
 import pygame
 import ui  # THE GOATTTTTT (LEBROOOOOOOOOONNNN)
 import physics
+import sys
+import os
 
-DEFAULT_FONT_LOC = "./assets/Comfortaa.ttf"  # WARN: Possibly worse than what I was doing before but I am NOT setting up a config file for this!!!
+DEFAULT_FONT_LOC = f"{os.path.dirname(sys.argv[0])}/assets/Comfortaa.ttf"  # WARN: Possibly worse than what I was doing before but I am NOT setting up a config file for this!!!
 
 # TODO: we need to implement a way to summon an object upon press of the rect object (maybe just take the current one but it wont really have physics yk
 
