@@ -3,10 +3,10 @@ ui.py
 
 Contains UI objects and essentially the entire UI system.
 (This file is used in multiple projects, this is NOT stolen code, these projects are owned/operated by me)
-TicTacToe4D Version (based on ModCord Version)
+PhysicsEngine Version (Based on TicTacToe4D version)
 """
-VER = "0.1.0"
-VER_STRING = "TicTacToe4D version (based on ModCord Version)"
+VER = "0.1.1"
+VER_STRING = "PhysicsEngine Version (based on TicTacToe4D version)"
 
 import pathlib
 import math
