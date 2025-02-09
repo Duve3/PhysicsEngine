@@ -684,7 +684,7 @@ class CUIManager:
             mp[0] -= self.offset[0]
             mp[1] -= self.offset[1]
 
-        for obj in [obj for obj in self.ui_objects if obj.hasDrawn]:  # redefined to only tick visible objects.
+        for obj in self.ui_objects:  # updated to tick ALL objects (avoids a bug that only ticked objects one frame after they were drawn)
             ne = [event for event in events if
                   event.type in obj.registeredEvents]  # only keeps events that are important.
             if len(ne) == 0:
