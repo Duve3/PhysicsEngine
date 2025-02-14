@@ -2,7 +2,7 @@
 ui.py
 
 Contains UI objects and essentially the entire UI system.
-(This file is used in multiple projects, this is NOT stolen code, these projects are owned/operated by me)
+(This file is used in multiple projects, this is NOT stolen code, these projects are owned/operated by Duve3 (me))
 PhysicsEngine Version (Based on TicTacToe4D version)
 """
 VER = "0.1.1"

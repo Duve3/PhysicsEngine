@@ -11,6 +11,7 @@ import os
 
 DEFAULT_FONT_LOC = f"{os.path.dirname(sys.argv[0])}/assets/Comfortaa.ttf"  # WARN: Possibly worse than what I was doing before but I am NOT setting up a config file for this!!!
 
+
 # TODO: we need to implement a way to summon an object upon press of the rect object (maybe just take the current one but it wont really have physics yk
 
 
@@ -48,7 +49,9 @@ class BoxDraggable(ui.CUIButton):
         super().__init__(x, y, width, height, color)
         self.registeredEvents = [pygame.MOUSEBUTTONUP, pygame.MOUSEBUTTONDOWN, pygame.MOUSEMOTION]
 
-        self.BOX_renderable = physics.Box(x, y, width, height, color, (0, 0))
+        self.hasDrawn = True  # WARN: not the best idea, but we threw optimizations far out of the window years ago
+
+        self.BOX_renderable = physics.Box(x, y, width, height, color, 0, 0)
 
     def draw(self, surface: pygame.Surface):
         self.BOX_renderable.color = self.color
@@ -73,12 +76,15 @@ class BoxDraggable(ui.CUIButton):
             return
 
         if event.type == pygame.MOUSEMOTION:
-            if self.isPressed:
-                pass
-
-            else:
+            if self.collidepoint(mouse_pos[0], mouse_pos[1]):
                 self.color = self.highlightColor
                 self.isHovered = True
+
+            else:
+                self.color = self.defaultColor
+                self.isHovered = False
+
+            return
 
 
 class BottomScrollbar:
@@ -86,20 +92,43 @@ class BottomScrollbar:
     This will be like our 'toolbox' that contains stuff we can use
     """
 
-    def __init__(self, screen: ui.CScreen):
+    def __init__(self, screen: ui.CScreen, game_ref: 'Game'):
         self.screen = screen
         height = 200
-        self.RECT_drawable = ui.CRect(0, screen.surface.height - height, screen.surface.width, height, ui.CUColor.GRAY())
+        self.game_ref: 'Game' = game_ref
 
-        self.BOX_DRAGGABLE = BoxDraggable(self.RECT_drawable.x + 20, self.RECT_drawable.y + 100, 50, 50, ui.CUColor.RED())
+        self.RECT_drawable = ui.CRect(0, screen.surface.height - height, screen.surface.width, height,
+                                      ui.CUColor.GRAY())
 
-        self.MANAGER_ui = ui.CUIManager([])
+        self.BOX_DRAGGABLE = BoxDraggable(self.RECT_drawable.x + 20, self.RECT_drawable.y + 100, 100, 100,
+                                          ui.CUColor.RED())
+
+        self.MANAGER_ui = ui.CUIManager([self.BOX_DRAGGABLE])
+
+        self.summoned: physics.PhysicsObject = None
 
     def draw(self):
         self.screen.draw(self.RECT_drawable)
+        self.BOX_DRAGGABLE.draw(self.screen.surface)
+
+        if self.summoned:
+            self.summoned.draw(self.screen.surface)
 
     def tick(self, events):
         self.MANAGER_ui.tick(events)
+        mp = pygame.mouse.get_pos()
+        mp = [mp[0], mp[1]]
+
+        if self.BOX_DRAGGABLE.isPressed:
+            if not self.summoned:
+                self.summoned = physics.Box(mp[0], mp[1], 50, 50, ui.CUColor.RED(), 0, 0)
+
+            self.summoned.x, self.summoned.y = mp[0], mp[1]
+
+        else:
+            if self.summoned:
+                self.game_ref.MANAGER_physics.add(self.summoned)
+                self.summoned = None
 
 
 class Game:
@@ -107,11 +136,13 @@ class Game:
         self.screen = screen
 
         self.BOX_box = physics.Box(100, 0, 50, 50, ui.CUColor.RED())
-        self.SCROLLBAR_bottom = BottomScrollbar(screen)
+        self.SCROLLBAR_bottom = BottomScrollbar(screen, self)
         self.FLOAT_ground = self.SCROLLBAR_bottom.RECT_drawable.y
 
         # absolutely DISGUSTING line of code, has like three inline things that just shouldn't be done inline... ; edit: no more lambda!!!! yippie
-        self.BUTTON_force = ui.CUITextButton(100, 100, 200, 50, ui.CUColor.BLUE().darken(20, retColor=True), ui.CUIFont(DEFAULT_FONT_LOC, 20, ui.CUColor.WHITE()), "magic button", onPress=self.BUTTON_force_onPress)
+        self.BUTTON_force = ui.CUITextButton(100, 100, 200, 50, ui.CUColor.BLUE().darken(20, retColor=True),
+                                             ui.CUIFont(DEFAULT_FONT_LOC, 20, ui.CUColor.WHITE()), "magic button",
+                                             onPress=self.BUTTON_force_onPress)
 
         self.MANAGER_physics = physics.PhysicsManager([self.BOX_box])
         self.MANAGER_ui = ui.CUIManager([self.BUTTON_force])
@@ -121,12 +152,13 @@ class Game:
 
     def run(self):
         while True:
-            dt = self.screen.tick()/1000
+            dt = self.screen.tick() / 1000
 
             events = pygame.event.get()
             self.MANAGER_ui.tick(events)
             self.SCROLLBAR_bottom.tick(events)
-            self.MANAGER_physics.tick(int(self.FLOAT_ground), dt)  # typecast to int ; might lose data, but I think we're fine.
+            self.MANAGER_physics.tick(int(self.FLOAT_ground),
+                                      dt)  # typecast to int ; might lose data, but I think we're fine.
 
             for event in events:
                 if event.type == pygame.QUIT:
@@ -135,7 +167,7 @@ class Game:
             self.screen.fill(ui.CUColor.BLACK())
 
             self.SCROLLBAR_bottom.draw()
-            self.BOX_box.draw(self.screen.surface)
+            self.MANAGER_physics.draw(self.screen.surface)
             self.BUTTON_force.draw(self.screen.surface)
 
             pygame.display.flip()
