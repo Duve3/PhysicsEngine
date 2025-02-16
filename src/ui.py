@@ -5,7 +5,7 @@ Contains UI objects and essentially the entire UI system.
 (This file is used in multiple projects, this is NOT stolen code, these projects are owned/operated by Duve3 (me))
 PhysicsEngine Version (Based on TicTacToe4D version)
 """
-VER = "0.1.2"
+VER = "0.1.3"
 VER_STRING = "PhysicsEngine Version (based on TicTacToe4D version)"
 
 import pathlib
@@ -270,8 +270,8 @@ class CRect(pygame.FRect):
         xcenter = surface.width // 2
         ycenter = surface.height // 2
 
-        self.x = xcenter - (self.width // 2) + offsetx
-        self.y = ycenter - (self.height // 2) + offsety
+        self.x = (xcenter - (self.width // 2)) + offsetx
+        self.y = (ycenter - (self.height // 2)) + offsety
 
 
 class CLine(BaseObject):
@@ -481,13 +481,20 @@ class CUITextButton(CUIButton):
         super().__init__(x, y, width, height, defaultColor, pressedColor, highlightColor, onPress, **kwargs)
         self.font = font
         self._text = text
-        self.text_pos = (self.centerx - self.font.get_rect(text, size=self.font.size).width // 2,
-                         self.centery - self.font.get_rect(text, size=self.font.size).height // 2)
+
+        self.text_pos = self.realign_text(ret=True)
 
         if len(text.split("\n")) > 1:
             self.multiline = True
         else:
             self.multiline = False
+
+    def realign_text(self, ret: bool = False):
+        self.text_pos = (self.centerx - self.font.get_rect(self._text, size=self.font.size).width // 2,
+                         self.centery - self.font.get_rect(self._text, size=self.font.size).height // 2)
+
+        if ret:
+            return self.text_pos
 
     @property
     def text(self):
@@ -506,6 +513,10 @@ class CUITextButton(CUIButton):
         else:
             self.font.render_to(screen, self.text_pos, self.text)
 
+    def align_center(self, surface: pygame.Surface, offsetx: int = 0, offsety: int = 0):
+        super().align_center(surface, offsetx, offsety)
+
+        self.realign_text()
 
 
 class CUILabel(CUIObject):
@@ -947,6 +958,8 @@ class CScaleScreen(CScreen):
     WARN: You should NEVER attempt to go inside and take the direct screen! (it will FAIL)
     ^ instead take the `prescaledSurface` object
 
+    VER 0.1.3: Removed `Scrap` as it is automatically started upon screen declaration (should've been done earlier...)
+
     :param Sequence[float] size: The STARTING size of the display defaults to (800, 600).
     :param int flags: The pygame flags to pass to the creation of the screen
     :param int display: Unknown what this really does, not listed in any documentation.
@@ -959,7 +972,7 @@ class CScaleScreen(CScreen):
     """
 
     def __init__(self, size: Sequence[float] = (0, 0), flags: int = 0, display: int = 0,
-                 vsync: int = 0, caption: str = "No Caption Provided", icon: str = None, scrap: bool = False,
+                 vsync: int = 0, caption: str = "No Caption Provided", icon: str = None,
                  clock: bool = False, fps: int = 60, prescaledSize: Sequence[float] = (0, 0)):
         super().__init__(size, flags | pygame.RESIZABLE, display, vsync, caption, icon, clock, fps)
         # some odd fix that patches prescaled not using updated size from the super func

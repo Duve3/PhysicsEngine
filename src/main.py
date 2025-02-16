@@ -4,15 +4,12 @@ main.py
 Contains the main point of the game
 """
 import pygame
-import ui  # THE GOATTTTTT (LEBROOOOOOOOOONNNN)
+import ui
 import physics
 import sys
 import os
 
 DEFAULT_FONT_LOC = f"{os.path.dirname(sys.argv[0])}/assets/Comfortaa.ttf"  # WARN: Possibly worse than what I was doing before but I am NOT setting up a config file for this!!!
-
-
-# TODO: we need to implement a way to summon an object upon press of the rect object (maybe just take the current one but it wont really have physics yk
 
 
 class MainMenu:
@@ -23,6 +20,7 @@ class MainMenu:
 
         self.BUTTON_play = ui.CUITextButton(100, 100, 100, 50, ui.CUColor.GREEN(), font=self.FONT_default, text="Play",
                                             onPress=self.exit)
+        self.BUTTON_play.align_center(self.screen.surface, 0, 0)
         self.MANAGER_ui = ui.CUIManager([self.BUTTON_play])
         self.loop = True
 
@@ -51,7 +49,7 @@ class BoxDraggable(ui.CUIButton):
 
         self.hasDrawn = True  # WARN: not the best idea, but we threw optimizations far out of the window years ago
 
-        self.BOX_renderable = physics.Box(x, y, width, height, color, 0, 0)
+        self.BOX_renderable = physics.Box(x, y, width, height, color, 1, 0, 0)
 
     def draw(self, surface: pygame.Surface):
         self.BOX_renderable.color = self.color
@@ -105,7 +103,7 @@ class BottomScrollbar:
 
         self.MANAGER_ui = ui.CUIManager([self.BOX_DRAGGABLE])
 
-        self.summoned: physics.PhysicsObject = None
+        self.summoned: physics.PhysicsObject = None  # noqa ; probably fineeee
 
     def draw(self):
         self.screen.draw(self.RECT_drawable)
@@ -121,9 +119,9 @@ class BottomScrollbar:
 
         if self.BOX_DRAGGABLE.isPressed:
             if not self.summoned:
-                self.summoned = physics.Box(mp[0], mp[1], 50, 50, ui.CUColor.RED(), 0, 0)
+                self.summoned = physics.Box(mp[0], mp[1], 50, 50, ui.CUColor.RED(), 2, 0, 0)
 
-            self.summoned.x, self.summoned.y = mp[0], mp[1]
+            self.summoned.x, self.summoned.y = mp[0] - self.summoned.width//2, mp[1] - self.summoned.height//2
 
         else:
             if self.summoned:
@@ -138,6 +136,7 @@ class Game:
         self.BOX_box = physics.Box(100, 0, 50, 50, ui.CUColor.RED())
         self.SCROLLBAR_bottom = BottomScrollbar(screen, self)
         self.FLOAT_ground = self.SCROLLBAR_bottom.RECT_drawable.y
+        print(self.FLOAT_ground)
 
         # absolutely DISGUSTING line of code, has like three inline things that just shouldn't be done inline... ; edit: no more lambda!!!! yippie
         self.BUTTON_force = ui.CUITextButton(100, 100, 200, 50, ui.CUColor.BLUE().darken(20, retColor=True),
@@ -148,7 +147,7 @@ class Game:
         self.MANAGER_ui = ui.CUIManager([self.BUTTON_force])
 
     def BUTTON_force_onPress(self):
-        self.MANAGER_physics.apply_force((0, 100))
+        self.MANAGER_physics.apply_accel_to_all_objs((10, 100))
 
     def run(self):
         while True:
