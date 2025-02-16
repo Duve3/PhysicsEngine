@@ -5,7 +5,7 @@ Contains UI objects and essentially the entire UI system.
 (This file is used in multiple projects, this is NOT stolen code, these projects are owned/operated by Duve3 (me))
 PhysicsEngine Version (Based on TicTacToe4D version)
 """
-VER = "0.1.1"
+VER = "0.1.2"
 VER_STRING = "PhysicsEngine Version (based on TicTacToe4D version)"
 
 import pathlib
@@ -260,6 +260,19 @@ class CRect(pygame.FRect):
                          self.draw_border_top_left_radius, self.draw_border_top_right_radius,
                          self.draw_border_bottom_left_radius, self.draw_border_bottom_right_radius)
 
+    def align_center(self, surface: pygame.Surface, offsetx: int = 0, offsety: int = 0):
+        """
+        Aligns the rectangle to the middle of the screen (plus whatever offset provided)
+        :param pygame.Surface surface: The Surface to center on
+        :param int offsetx: The offset to ADD to the x value
+        :param int offsety: The offset to ADD to the y value
+        """
+        xcenter = surface.width // 2
+        ycenter = surface.height // 2
+
+        self.x = xcenter - (self.width // 2) + offsetx
+        self.y = ycenter - (self.height // 2) + offsety
+
 
 class CLine(BaseObject):
     """
@@ -492,6 +505,7 @@ class CUITextButton(CUIButton):
             self.font.multiline_render_to(screen, self.text_pos, self.text)
         else:
             self.font.render_to(screen, self.text_pos, self.text)
+
 
 
 class CUILabel(CUIObject):
