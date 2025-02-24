@@ -9,10 +9,8 @@ import ui
 import pygame
 
 
-# TODO: i think there are some flaws in the grounded system,
-#       Example: like if you want to move an object again after it hits the ground, it cant?
-#       I think we should allow movements to continue, just set accel's and vel's to 0
-#       No form of stoppage via variables
+# TODO: Add a way to use assets instead of rectangles when drawing objects
+
 
 class Hitbox(pygame.FRect):
     def __init__(self, x, y, w, h):
@@ -33,8 +31,6 @@ class PhysicsObject:
         self.vely = vely
         self.accelx = 0
         self.accely = 0
-        self.grounded_y = False
-        self.grounded_x = False  # debug: this is the stuff i was talking about in my to\do
         self.hitbox = hitbox
         self.mass = mass
 
@@ -58,17 +54,14 @@ class PhysicsObject:
         self.vely = 0
         self.accelx = 0
         self.accely = 0
-        self.grounded_y = True
 
     def apply_force(self, force: Sequence[int]):
-        if not self.grounded_y:
-            self.accely += force[1] / self.mass
+        self.accely += force[1] / self.mass
 
         self.accelx += force[0] / self.mass
 
     def apply_accel(self, accel: Sequence[int]):
-        if not self.grounded_y:
-            self.accely += accel[1]
+        self.accely += accel[1]
 
         self.accelx += accel[0]
 
@@ -98,24 +91,22 @@ class PhysicsManager:
         for obj in self.objs:
             obj.tick(deltatime)
 
-            if obj.grounded_y is True:
-                continue
-
-            # REST OF THIS LOOP IS ONLY FOR OBJECTS THAT AREN'T GROUNDED
-
             nextframe_x, nextframe_y = obj.next_frame(deltatime)
 
             if nextframe_y >= ground - obj.height:
                 obj.y = ground - obj.height
                 obj.vely = 0
                 obj.accely = 0
-                obj.grounded_y = True
 
             if nextframe_x <= left_edge:
                 obj.x = left_edge
                 obj.velx = 0
                 obj.accelx = 0
-                obj.grounded_x = True
+
+            if nextframe_x >= right_edge - obj.width:
+                obj.x = right_edge - obj.width
+                obj.velx = 0
+                obj.accelx = 0
 
             # COLLISION BETWEEN OBJS
 
@@ -127,7 +118,6 @@ class PhysicsManager:
                     obj.y = o2.y - obj.height
                     obj.vely = 0
                     obj.accely = 0
-                    obj.grounded_y = True
 
     def add(self, obj: PhysicsObject):
         self.objs.append(obj)
